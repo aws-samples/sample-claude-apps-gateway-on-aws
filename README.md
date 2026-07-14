@@ -8,15 +8,17 @@ Everything here — the container images, the IAM policies, the Okta OIDC integr
 
 ![Claude Apps Gateway on AWS architecture diagram](docs/images/claude-apps-gateway-on-aws.png)
 
-Five CDK stacks, deployed together:
+Seven CDK stacks, deployed together:
 
 | Stack | Contents |
 |---|---|
 | `ClaudeGatewayNetworkStack` | A dedicated VPC: 2 private subnets (gateway) + 2 public subnets (admin console), 1 NAT Gateway, VPC interface endpoints for Bedrock and Secrets Manager, and the 3 security groups tying it together. |
 | `ClaudeGatewayDatabaseStack` | Aurora Serverless v2 PostgreSQL (auto-pausing, encrypted at rest), with a Lambda-backed Custom Resource that safely derives a single `postgres_url` connection secret from RDS's own auto-managed credentials. |
-| `ClaudeGatewaySecretsStack` | Generated secrets for JWT signing, the admin API write key, and console session signing — plus an empty placeholder for the Okta client secret, whose real value you set once after deploying (see [docs/02-deploy.md](docs/02-deploy.md)). |
-| `ClaudeGatewayStack` | The gateway itself: `DockerImageAsset`-built container, 3 IAM roles, and an `AWS::ECS::ExpressGatewayService` on the private subnets. |
+| `ClaudeGatewaySecretsStack` | Generated secrets for JWT signing, the admin API write key, and console session signing. The Okta client secret is a required deploy-time parameter (`-c oidcClientSecret=...`, see [docs/02-deploy.md](docs/02-deploy.md)) — the gateway validates its config at boot and treats it as required, so it isn't a fill-in-after-deploy placeholder. |
+| `ClaudeGatewayBuildMachineStack` | A temporary Linux x86_64 EC2 instance that builds and pushes both container images, torn down automatically once the images are in ECR — this exists because the gateway's Dockerfile downloads an x86_64-only binary, and building locally on Apple Silicon produces an image Fargate can't run. |
+| `ClaudeGatewayStack` | The gateway itself: the image built by the build-machine stack, 3 IAM roles, and an `AWS::ECS::ExpressGatewayService` on the private subnets. |
 | `ClaudeGatewayAdminConsoleStack` | The admin console: same pattern, on the public subnets, wired to the gateway's real endpoint automatically. |
+| `ClaudeGatewayVpnStack` | A self-service AWS Client VPN endpoint with mutual TLS certificates generated inside the deploy and a ready-to-import `.ovpn` profile delivered via Secrets Manager — this is what actually lets you reach the private gateway. |
 
 The gateway is deliberately private (Express Mode provisions an internal load balancer for it, since its subnets have no direct internet route) — developers reach it only via the CLI's device-flow login. The admin console is deliberately public — it's gated by Okta group membership rather than network placement, so admins don't need VPN access just to manage spend limits.
 
@@ -24,6 +26,7 @@ The gateway is deliberately private (Express Mode provisions an internal load ba
 
 - **The gateway**, containerized with the `claude` binary downloaded and cryptographically verified (GPG signature + SHA256 checksum against Anthropic's published manifest) at Docker build time — no pre-staged binary dependency.
 - **The admin console** (FastAPI + server-rendered HTML): an effective-spend dashboard, spend-limit CRUD, and model-access management — showing the live Anthropic model catalog from Bedrock, not a hardcoded list, and applying changes as a plain ECS parameter update with no image rebuild. See [docs/04-admin-console-guide.md](docs/04-admin-console-guide.md) for how this works and its auditability trade-offs.
+- **A self-service AWS Client VPN endpoint**, with its own mutual TLS certificate chain generated during the deploy and a ready-to-import `.ovpn` profile waiting in Secrets Manager — no separate PKI setup, no manual certificate handling.
 - **The full CDK app**, using AWS CDK's native `CfnExpressGatewayService` L1 construct — no hand-rolled `AwsCustomResource` needed for the ECS Express Mode service itself.
 
 ## Getting started
