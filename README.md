@@ -38,13 +38,17 @@ The gateway is deliberately private (Express Mode provisions an internal load ba
 
 The admin console turns spend control and model access — normally a support ticket, a CLI command, or a redeploy — into something a platform admin manages directly, with every action attributed to their own identity and audited by the gateway itself.
 
-| Spend dashboard | Spend limits |
-|---|---|
-| ![Admin console spend dashboard](docs/images/admin-console-spend-dashboard.png) | ![Admin console spend limits](docs/images/admin-console-spend-limits.png) |
+**See exactly who's spending what, in real time.**
+![Admin console spend dashboard](docs/images/admin-console-spend-dashboard.png)
 
-| Audit log | Model access |
-|---|---|
-| ![Admin console audit log](docs/images/admin-console-audit-log.png) | ![Admin console model access](docs/images/admin-console-model-access.png) |
+**Set a cap in seconds — no ticket, no redeploy, enforced on the very next request.**
+![Admin console spend limits](docs/images/admin-console-spend-limits.png)
+
+**Every change traced to the real admin who made it — not a shared credential.**
+![Admin console audit log](docs/images/admin-console-audit-log.png)
+
+**Flip on a new Claude model for your whole org with a checkbox, live from Bedrock's own catalog.**
+![Admin console model access](docs/images/admin-console-model-access.png)
 
 ## Cost note
 
