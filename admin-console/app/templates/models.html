@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Available models - Claude Gateway Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Available models</h1>
+  <p class="page-header__description">Choose which models developers can select in Claude Code. The catalog below is read live from Amazon Bedrock.</p>
+</div>
+
+{% if error %}
+<div class="alert alert--error">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="alert alert--success" id="save-alert">{{ success }}</div>
+{% endif %}
+
+<div class="alert alert--info">
+  This is not meant to be a frequent change. Applying updates the gateway's configuration and redeploys it &mdash; the new model list takes effect for every developer within a few minutes, not instantly and not per-user.
+</div>
+
+<div class="container">
+  <div class="container__header">
+    <h2>Model catalog</h2>
+    <span class="status-pill" id="status-pill">
+      <span class="status-pill__dot"></span>
+      <span id="status-pill-text">Active</span>
+    </span>
+  </div>
+  <div class="container__body" style="padding:0;">
+    {% if catalog %}
+    <form method="post" action="/models/apply" id="apply-form">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Model</th>
+            <th>Status</th>
+            <th>Currently</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for model in catalog %}
+          <tr>
+            <td style="width:1%;">
+              <input type="checkbox" name="model_id" value="{{ model.gateway_id }}" {% if model.enabled %}checked{% endif %}>
+            </td>
+            <td>
+              {{ model.label }}
+              <div class="text-secondary mono" style="font-size:12px;">{{ model.gateway_id }}</div>
+            </td>
+            <td>
+              {% if model.status == 'ACTIVE' %}
+                <span class="badge badge--success">Active</span>
+              {% else %}
+                <span class="badge badge--warning">Legacy</span>
+              {% endif %}
+            </td>
+            <td class="text-secondary">{{ 'Offered' if model.enabled else 'Not offered' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="container__body" style="border-top:1px solid var(--color-border-divider-default);">
+        <button type="button" class="btn btn--primary" id="apply-btn" onclick="confirmApply()">Apply changes</button>
+      </div>
+    </form>
+    {% else %}
+    <div class="empty-state">Could not load the model catalog from Bedrock.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function confirmApply() {
+  const checked = document.querySelectorAll('input[name="model_id"]:checked').length;
+  if (checked === 0) {
+    alert('Select at least one model before applying.');
+    return;
+  }
+  const ok = confirm(
+    'Apply the selected ' + checked + ' model(s) to the gateway?\n\n' +
+    'This redeploys the gateway. The change is not instant and is not meant to be ' +
+    'made frequently -- it will take effect for every developer within a few minutes.'
+  );
+  if (ok) {
+    document.getElementById('apply-form').submit();
+  }
+}
+
+// Soft eventual-consistency indicator: after applying, show "Applying..."
+// and poll until the gateway's deployment has settled, then flip back to
+// "Active". No deployment IDs, canary percentages, or task counts are
+// exposed here -- just the two states an admin actually needs to know.
+(function () {
+  const pill = document.getElementById('status-pill');
+  const pillText = document.getElementById('status-pill-text');
+  const justSaved = {{ 'true' if success else 'false' }};
+
+  function setApplying() {
+    pill.classList.add('status-pill--applying');
+    pillText.textContent = 'Applying…';
+  }
+  function setActive() {
+    pill.classList.remove('status-pill--applying');
+    pillText.textContent = 'Active';
+  }
+
+  function poll() {
+    fetch('/models/status')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.settled) {
+          setActive();
+        } else {
+          setApplying();
+          setTimeout(poll, 5000);
+        }
+      })
+      .catch(() => setTimeout(poll, 5000));
+  }
+
+  if (justSaved) {
+    setApplying();
+    setTimeout(poll, 3000);
+  }
+})();
+</script>
+{% endblock %}

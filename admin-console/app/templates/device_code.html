@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Complete sign-in - Claude Gateway Admin</title>
+  <link rel="stylesheet" href="/static/css/cloudscape.css">
+</head>
+<body>
+  <div class="signin-wrapper">
+    <div class="signin-card">
+      <h1>Confirm this sign-in</h1>
+      <p class="text-secondary">Open the link below and confirm the code matches, then sign in with your corporate identity provider.</p>
+      <div class="device-code">{{ device.user_code }}</div>
+      <a class="btn btn--primary" href="{{ device.verification_uri_complete }}" target="_blank" rel="noopener" style="width:100%; justify-content:center;">
+        Open verification page
+      </a>
+      <p class="form-field__hint" id="status-text" style="margin-top:16px;">Waiting for confirmation&hellip;</p>
+    </div>
+  </div>
+
+  <script>
+    const deviceCode = {{ device.device_code | tojson }};
+    const pollInterval = {{ device.interval | tojson }} * 1000;
+    const statusText = document.getElementById('status-text');
+
+    async function poll() {
+      try {
+        const resp = await fetch('/signin/poll', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_code: deviceCode }),
+        });
+        const data = await resp.json();
+        if (data.status === 'complete') {
+          statusText.textContent = 'Signed in \u2014 redirecting\u2026';
+          window.location.href = data.redirect || '/';
+          return;
+        }
+        if (data.status === 'error') {
+          statusText.textContent = 'Sign-in failed: ' + data.message;
+          return;
+        }
+        // still pending
+        setTimeout(poll, pollInterval);
+      } catch (e) {
+        statusText.textContent = 'Network error, retrying\u2026';
+        setTimeout(poll, pollInterval);
+      }
+    }
+    setTimeout(poll, pollInterval);
+  </script>
+</body>
+</html>

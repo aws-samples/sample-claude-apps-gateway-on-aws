@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Effective spend - Claude Gateway Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Effective spend</h1>
+  <p class="page-header__description">Resolved spend cap and period-to-date spend per developer, as reported by the gateway's own admin API.</p>
+</div>
+
+{% if error %}
+<div class="alert alert--error">{{ error }}</div>
+{% endif %}
+
+<div class="container">
+  <div class="container__header">
+    <h2>Developers with recorded spend</h2>
+    <form method="get" action="/spend/dashboard" class="flex-row">
+      <input type="text" name="q" placeholder="Search email, name, or user ID" value="{{ q or '' }}">
+      <select name="period">
+        <option value="daily" {% if period == 'daily' %}selected{% endif %}>Daily</option>
+        <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>Weekly</option>
+        <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+      </select>
+      <select name="sort">
+        <option value="" {% if not sort %}selected{% endif %}>Default order</option>
+        <option value="spend_desc" {% if sort == 'spend_desc' %}selected{% endif %}>Highest spend first</option>
+      </select>
+      <button class="btn btn--normal" type="submit">Apply</button>
+    </form>
+  </div>
+  <div class="container__body" style="padding:0;">
+    {% if rows %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Developer</th>
+          <th>Groups</th>
+          <th>Period</th>
+          <th class="numeric">Spend to date</th>
+          <th class="numeric">Cap</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>
+            <div>{{ row.actor.name or row.actor.email_address or 'Unknown' }}</div>
+            <div class="text-secondary mono" style="font-size:12px;">{{ row.scope.user_id or row.scope.rbac_group_id or '\u2014' }}</div>
+          </td>
+          <td class="text-secondary">{{ (row.groups or []) | join(', ') or '\u2014' }}</td>
+          <td>{{ row.period | capitalize }}</td>
+          <td class="numeric">${{ '%.2f' | format((row.period_to_date_spend | float) / 100) }}</td>
+          <td class="numeric">
+            {% if row.amount is none %}
+              <span class="text-secondary">Unlimited</span>
+            {% else %}
+              ${{ '%.2f' | format((row.amount | float) / 100) }}
+            {% endif %}
+          </td>
+          <td>
+            {% set spend_dollars = (row.period_to_date_spend | float) / 100 %}
+            {% set cap_dollars = (row.amount | float / 100) if row.amount is not none else none %}
+            {% if cap_dollars is not none and spend_dollars >= cap_dollars %}
+              <span class="badge badge--error">Over cap</span>
+            {% elif cap_dollars is not none and spend_dollars >= (cap_dollars * 0.8) %}
+              <span class="badge badge--warning">Near cap</span>
+            {% else %}
+              <span class="badge badge--success">OK</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">No spend recorded yet for this period. Developers appear here after their first inference request through the gateway.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

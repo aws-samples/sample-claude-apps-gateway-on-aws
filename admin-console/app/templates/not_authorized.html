@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Not authorized - Claude Gateway Admin{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <h1>Not authorized</h1>
+  <p>Your account ({{ admin.email or admin.sub }}) signed in successfully, but is not a member of the
+    <strong>claude-gateway-admins</strong> group. Ask your identity provider administrator to add you
+    to that group, then <a href="/signout">sign out</a> and sign in again.</p>
+</div>
+{% endblock %}

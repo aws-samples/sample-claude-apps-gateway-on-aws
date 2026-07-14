@@ -1,0 +1,22 @@
+# CDK
+cdk/cdk.out/
+cdk/cdk.context.json
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+admin-console/.venv/
+admin-console/__pycache__/
+admin-console/**/__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Never commit real secrets or VPN profiles
+*.ovpn
+*.pem
+*.key

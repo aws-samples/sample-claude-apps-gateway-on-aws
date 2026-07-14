@@ -1,0 +1,83 @@
+listen:
+  host: 0.0.0.0
+  port: 8080
+  # Resolved from an env var (not a secret) because the ECS Express Mode
+  # service's URL is only known after the service is created -- see
+  # docs/02-deploy.md for how the CDK app wires this without a manual
+  # two-pass "deploy, then patch the URL" step.
+  public_url: ${GATEWAY_PUBLIC_URL}
+
+oidc:
+  # Replace with your own Okta (or other OIDC-compliant IdP) issuer and
+  # OAuth client ID. See docs/01-prerequisites.md for exact setup steps,
+  # including two gotchas that aren't obvious from Okta's UI alone.
+  issuer: ${OIDC_ISSUER}
+  client_id: ${OIDC_CLIENT_ID}
+  client_secret: ${OIDC_CLIENT_SECRET}
+  # Required if your IdP's issuer is an Okta ORG authorization server (the
+  # default on Okta's free/Integrator plans, which have no custom
+  # authorization server). The org server returns a thin id_token that omits
+  # email and groups; userinfo_fallback fetches them from /userinfo instead.
+  # Harmless to leave on for IdPs that don't need it.
+  userinfo_fallback: true
+  # Okta only emits the groups claim when the groups scope is explicitly
+  # requested AND the app's own "Group claim type" is configured under
+  # Sign On -> OpenID Connect ID Token (see docs/01-prerequisites.md --
+  # requesting the scope alone is necessary but not sufficient on Okta).
+  scopes: [openid, profile, email, offline_access, groups]
+  # allowed_email_domains: [example.com]   # uncomment and restrict for production
+
+session:
+  jwt_secret: ${GATEWAY_JWT_SECRET}
+  ttl_hours: 8
+
+store:
+  postgres_url: ${GATEWAY_POSTGRES_URL}
+
+upstreams:
+  - provider: bedrock
+    region: ${AWS_REGION}
+    auth: {}   # empty: picks up the ECS task role via the AWS SDK default credential chain
+
+auto_include_builtin_models: true
+
+# Enables /v1/organizations/spend_limits and live per-developer spend
+# enforcement, plus the model-access management the admin console uses.
+# admin_groups grants full (read+write) access to any signed-in gateway
+# session whose groups claim includes the group named below -- this is what
+# the admin console uses, via the gateway's own device-authorization flow,
+# so every spend-limit admin action audits as oidc:<sub> rather than
+# admin-key:<id>. write_keys is kept only for out-of-band CLI/automation
+# verification (e.g. curl, CI) -- the admin console never uses it.
+admin:
+  write_keys:
+    - id: cli-verification
+      key: ${GATEWAY_ADMIN_WRITE_KEY}
+  admin_groups: ["${ADMIN_OKTA_GROUP_NAME}"]
+
+managed:
+  policies:
+    - match: {}   # catch-all: applies to every signed-in developer
+      cli:
+        # AVAILABLE_MODELS_RAW is substituted at container start by
+        # /entrypoint.sh using a shell-level `sed`, before the gateway
+        # binary reads this file. The value is a YAML flow-sequence string
+        # injected via the ECS environment variable of the same name, e.g.
+        # "[claude-sonnet-4-6, claude-opus-4-8]".
+        #
+        # This indirection exists because the gateway's own ${VAR}
+        # expansion (used everywhere else in this file) only resolves into
+        # scalar string positions in the YAML, never into a list/sequence
+        # position -- confirmed by testing: an unquoted multi-${VAR} list
+        # fails YAML parsing, and a single ${VAR} standing in for the whole
+        # list fails schema validation ("expected array, received string").
+        # Substituting at the shell level, before the gateway ever parses
+        # the file, sidesteps that limitation entirely, so admins can change
+        # the model catalog via a plain ECS parameter update and redeploy --
+        # no container image rebuild required. See the admin console's
+        # app/gateway_models.py for the write side of this mechanism.
+        availableModels: ${AVAILABLE_MODELS_RAW}
+
+# telemetry section intentionally omitted: no OTLP collector configured in
+# this reference deployment. Add a telemetry.forward_to block if you have
+# an observability backend -- see the configuration reference.

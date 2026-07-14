@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in - Claude Gateway Admin</title>
+  <link rel="stylesheet" href="/static/css/cloudscape.css">
+</head>
+<body>
+  <div class="signin-wrapper">
+    <div class="signin-card">
+      <h1>&#9670; Claude Gateway Admin</h1>
+      <p class="text-secondary">Sign in with your corporate identity provider to manage spend limits.</p>
+      <form method="post" action="/signin/start">
+        <button class="btn btn--primary" type="submit" style="width:100%; justify-content:center;">
+          Sign in through the gateway
+        </button>
+      </form>
+      <p class="form-field__hint" style="margin-top:16px;">
+        Access is restricted to members of the <strong>claude-gateway-admins</strong> group in your identity provider.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

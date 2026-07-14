@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Audit log - Claude Gateway Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Audit log</h1>
+  <p class="page-header__description">Every spend-limit change, newest first, as recorded by the gateway itself.</p>
+</div>
+
+{% if error %}
+<div class="alert alert--error">{{ error }}</div>
+{% endif %}
+
+<div class="container">
+  <div class="container__body" style="padding:0;">
+    {% if entries %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Actor</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td class="text-secondary">{{ entry.created_at }}</td>
+          <td class="mono">{{ entry.actor }}</td>
+          <td>
+            <div>{{ entry.action | default('updated', true) | capitalize }} cap</div>
+            <div class="text-secondary" style="font-size:12px;">
+              {% if entry.before %}before: {{ entry.before }}{% endif %}
+              {% if entry.after %} &rarr; after: {{ entry.after }}{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">No admin actions recorded yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

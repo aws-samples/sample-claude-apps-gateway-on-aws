@@ -1,0 +1,392 @@
+/*
+ * Cloudscape-inspired styling for the Claude apps gateway admin console.
+ *
+ * This is a hand-rolled approximation of AWS Cloudscape Design System's visual
+ * language (colors, spacing, typography, component shapes) using plain CSS --
+ * not the actual Cloudscape React component library, since this app is
+ * server-rendered Jinja2, not React. Design tokens below are taken from
+ * Cloudscape's public design tokens (cloudscape.design).
+ */
+
+:root {
+  /* Cloudscape color tokens (light mode) */
+  --color-background-layout-main: #ffffff;
+  --color-background-layout-toggle: #232f3e; /* AWS Console top-nav dark */
+  --color-background-container: #ffffff;
+  --color-background-container-header: #fafafa;
+  --color-border-divider-default: #e9ebed;
+  --color-border-input-default: #7d8998;
+  --color-text-body-default: #16191f;
+  --color-text-body-secondary: #5f6b7a;
+  --color-text-heading-default: #0f1b2a;
+  --color-text-link-default: #0972d3;
+  --color-text-link-hover: #033160;
+  --color-background-button-primary-default: #0972d3;
+  --color-background-button-primary-hover: #033160;
+  --color-background-button-primary-active: #022e63;
+  --color-text-button-primary-default: #ffffff;
+  --color-background-status-success: #eefaf0;
+  --color-text-status-success: #1a7f3c;
+  --color-border-status-success: #1a7f3c;
+  --color-background-status-warning: #fef7e0;
+  --color-text-status-warning: #8a6800;
+  --color-border-status-warning: #8a6800;
+  --color-background-status-error: #fdf3f1;
+  --color-text-status-error: #d13212;
+  --color-border-status-error: #d13212;
+  --color-background-status-info: #f0f8ff;
+  --color-text-status-info: #0972d3;
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
+  --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-s: 12px;
+  --space-m: 16px;
+  --space-l: 20px;
+  --space-xl: 32px;
+  --border-radius-container: 8px;
+  --border-radius-button: 4px;
+  --border-radius-input: 4px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: 14px;
+  line-height: 1.4285;
+  color: var(--color-text-body-default);
+  background: #f2f3f3;
+}
+
+/* ---- Top navigation, styled after the AWS Console's global header ---- */
+.top-nav {
+  background: var(--color-background-layout-toggle);
+  color: #ffffff;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-l);
+  gap: var(--space-m);
+}
+.top-nav__brand {
+  font-weight: 700;
+  font-size: 16px;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.top-nav__spacer { flex: 1; }
+.top-nav__identity {
+  font-size: 13px;
+  color: #d5dbdb;
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+}
+.top-nav__signout {
+  color: #ffffff;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: var(--border-radius-button);
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.top-nav__signout:hover { background: rgba(255,255,255,0.1); }
+
+/* ---- Layout: side nav + content, like the AWS Console app layout ---- */
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 56px);
+}
+.side-nav {
+  width: 240px;
+  background: #ffffff;
+  border-right: 1px solid var(--color-border-divider-default);
+  padding: var(--space-l) 0;
+  flex-shrink: 0;
+}
+.side-nav__section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-body-secondary);
+  padding: 0 var(--space-l);
+  margin-bottom: var(--space-xs);
+}
+.side-nav__link {
+  display: block;
+  padding: var(--space-s) var(--space-l);
+  color: var(--color-text-body-default);
+  text-decoration: none;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+.side-nav__link:hover { background: #f4f4f4; }
+.side-nav__link--active {
+  border-left-color: var(--color-text-link-default);
+  background: #f0f8ff;
+  color: var(--color-text-link-default);
+  font-weight: 700;
+}
+.content {
+  flex: 1;
+  padding: var(--space-xl);
+  max-width: 1200px;
+}
+
+/* ---- Page header ---- */
+.page-header { margin-bottom: var(--space-l); }
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--color-text-heading-default);
+  margin: 0 0 var(--space-xs) 0;
+}
+.page-header__description {
+  color: var(--color-text-body-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ---- Container (Cloudscape "Container" component) ---- */
+.container {
+  background: var(--color-background-container);
+  border: 1px solid var(--color-border-divider-default);
+  border-radius: var(--border-radius-container);
+  margin-bottom: var(--space-l);
+}
+.container__header {
+  padding: var(--space-m) var(--space-l);
+  border-bottom: 1px solid var(--color-border-divider-default);
+  background: var(--color-background-container-header);
+  border-radius: var(--border-radius-container) var(--border-radius-container) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.container__header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text-heading-default);
+}
+.container__body { padding: var(--space-l); }
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: var(--border-radius-button);
+  padding: 7px 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  line-height: 1.2;
+}
+.btn--primary {
+  background: var(--color-background-button-primary-default);
+  color: var(--color-text-button-primary-default);
+}
+.btn--primary:hover { background: var(--color-background-button-primary-hover); }
+.btn--normal {
+  background: #ffffff;
+  color: var(--color-text-link-default);
+  border-color: var(--color-border-input-default);
+}
+.btn--normal:hover { background: #f0f8ff; }
+.btn--danger {
+  background: #ffffff;
+  color: var(--color-text-status-error);
+  border-color: var(--color-text-status-error);
+}
+.btn--danger:hover { background: var(--color-background-status-error); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Forms ---- */
+.form-field { margin-bottom: var(--space-m); }
+.form-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: var(--space-xxs);
+  color: var(--color-text-heading-default);
+}
+.form-field__hint {
+  font-size: 12px;
+  color: var(--color-text-body-secondary);
+  margin-top: var(--space-xxs);
+}
+input[type="text"], input[type="number"], select {
+  width: 100%;
+  max-width: 400px;
+  padding: 7px 10px;
+  font-size: 14px;
+  border: 1px solid var(--color-border-input-default);
+  border-radius: var(--border-radius-input);
+  font-family: inherit;
+}
+input:focus, select:focus {
+  outline: 2px solid var(--color-text-link-default);
+  outline-offset: -1px;
+}
+
+/* ---- Tables (Cloudscape Table) ---- */
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+table.data-table th {
+  text-align: left;
+  padding: var(--space-s) var(--space-m);
+  border-bottom: 2px solid var(--color-border-divider-default);
+  color: var(--color-text-heading-default);
+  font-weight: 700;
+  background: var(--color-background-container-header);
+}
+table.data-table td {
+  padding: var(--space-s) var(--space-m);
+  border-bottom: 1px solid var(--color-border-divider-default);
+}
+table.data-table tr:hover td { background: #fafbfc; }
+table.data-table .numeric { text-align: right; font-family: var(--font-family-mono); }
+
+/* ---- Status badges ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.badge--success { background: var(--color-background-status-success); color: var(--color-text-status-success); }
+.badge--warning { background: var(--color-background-status-warning); color: var(--color-text-status-warning); }
+.badge--error { background: var(--color-background-status-error); color: var(--color-text-status-error); }
+.badge--info { background: var(--color-background-status-info); color: var(--color-text-status-info); }
+
+/* ---- Alerts ---- */
+.alert {
+  border-radius: var(--border-radius-container);
+  padding: var(--space-m);
+  margin-bottom: var(--space-l);
+  display: flex;
+  gap: var(--space-s);
+  font-size: 14px;
+}
+.alert--error { background: var(--color-background-status-error); border: 1px solid var(--color-border-status-error); color: var(--color-text-status-error); }
+.alert--info { background: var(--color-background-status-info); border: 1px solid var(--color-text-status-info); color: var(--color-text-status-info); }
+.alert--success { background: var(--color-background-status-success); border: 1px solid var(--color-border-status-success); color: var(--color-text-status-success); }
+
+/* ---- Utility ---- */
+.text-secondary { color: var(--color-text-body-secondary); }
+.mono { font-family: var(--font-family-mono); }
+.flex-row { display: flex; align-items: center; gap: var(--space-s); }
+.flex-row--between { display: flex; align-items: center; justify-content: space-between; }
+.empty-state {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--color-text-body-secondary);
+}
+
+/* ---- Toggle switch (Cloudscape Toggle) ---- */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.toggle__track {
+  position: absolute;
+  inset: 0;
+  background: #b6bec9;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+.toggle__track::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  top: 2px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.toggle input:checked + .toggle__track { background: var(--color-background-button-primary-default); }
+.toggle input:checked + .toggle__track::before { transform: translateX(16px); }
+.toggle input:disabled + .toggle__track { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Status pill for eventually-consistent state (e.g. model changes) ---- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-body-secondary);
+}
+.status-pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-status-success);
+}
+.status-pill--applying .status-pill__dot {
+  background: var(--color-text-status-warning);
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ---- Sign-in / device-code page ---- */
+.signin-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2f3f3;
+}
+.signin-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border-divider-default);
+  border-radius: var(--border-radius-container);
+  padding: var(--space-xl);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+.signin-card h1 {
+  font-size: 20px;
+  margin-top: 0;
+}
+.device-code {
+  font-family: var(--font-family-mono);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: #f4f4f4;
+  border-radius: var(--border-radius-container);
+  padding: var(--space-m);
+  margin: var(--space-l) 0;
+}

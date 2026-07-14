@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Claude Gateway Admin{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/cloudscape.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav class="top-nav">
+    <a class="top-nav__brand" href="/">
+      &#9670; Claude Gateway Admin
+    </a>
+    <div class="top-nav__spacer"></div>
+    {% if admin %}
+    <div class="top-nav__identity">
+      <span>{{ admin.email or admin.sub }}</span>
+      <a class="top-nav__signout" href="/signout">Sign out</a>
+    </div>
+    {% endif %}
+  </nav>
+
+  <div class="app-layout">
+    {% if admin %}
+    <aside class="side-nav">
+      <div class="side-nav__section-title">Spend management</div>
+      <a class="side-nav__link {% if active_nav == 'dashboard' %}side-nav__link--active{% endif %}" href="/spend/dashboard">Effective spend</a>
+      <a class="side-nav__link {% if active_nav == 'limits' %}side-nav__link--active{% endif %}" href="/spend/limits">Spend limits</a>
+      <a class="side-nav__link {% if active_nav == 'audit' %}side-nav__link--active{% endif %}" href="/spend/audit">Audit log</a>
+      <div class="side-nav__section-title">Model access</div>
+      <a class="side-nav__link {% if active_nav == 'models' %}side-nav__link--active{% endif %}" href="/models">Available models</a>
+    </aside>
+    {% endif %}
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

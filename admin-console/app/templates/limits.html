@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Spend limits - Claude Gateway Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Spend limits</h1>
+  <p class="page-header__description">Caps are enforced live by the gateway on every inference request. Changes here take effect immediately &mdash; no redeploy required.</p>
+</div>
+
+{% if error %}
+<div class="alert alert--error">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="alert alert--success">{{ success }}</div>
+{% endif %}
+
+<div class="container">
+  <div class="container__header">
+    <h2>Create or replace a cap</h2>
+  </div>
+  <div class="container__body">
+    <form method="post" action="/spend/limits/create">
+      <div class="flex-row" style="align-items:flex-start; gap:24px;">
+        <div class="form-field" style="flex:1;">
+          <label for="scope_type">Scope</label>
+          <select id="scope_type" name="scope_type" onchange="toggleScopeFields()">
+            <option value="organization">Organization (org-wide default)</option>
+            <option value="rbac_group">IdP group</option>
+            <option value="user">Individual developer (OIDC sub)</option>
+          </select>
+        </div>
+        <div class="form-field" id="group-field" style="flex:1; display:none;">
+          <label for="rbac_group_id">Group name</label>
+          <input type="text" id="rbac_group_id" name="rbac_group_id" placeholder="e.g. eng-contractors">
+        </div>
+        <div class="form-field" id="user-field" style="flex:1; display:none;">
+          <label for="user_id">Developer's OIDC sub</label>
+          <input type="text" id="user_id" name="user_id" placeholder="e.g. 00u14zimsuqNOeY1c698">
+          <div class="form-field__hint">Find this on the Effective spend page.</div>
+        </div>
+      </div>
+      <div class="flex-row" style="align-items:flex-start; gap:24px;">
+        <div class="form-field" style="flex:1;">
+          <label for="amount_dollars">Cap amount (USD)</label>
+          <input type="number" id="amount_dollars" name="amount_dollars" min="0" step="0.01" placeholder="e.g. 500.00" required>
+          <div class="form-field__hint">Stored as whole-number cents. Use 0 to block every request.</div>
+        </div>
+        <div class="form-field" style="flex:1;">
+          <label for="period">Period</label>
+          <select id="period" name="period">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly" selected>Monthly</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn--primary" type="submit">Save cap</button>
+    </form>
+  </div>
+</div>
+
+<div class="container">
+  <div class="container__header">
+    <h2>Configured caps</h2>
+  </div>
+  <div class="container__body" style="padding:0;">
+    {% if limits %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Scope</th>
+          <th>Period</th>
+          <th class="numeric">Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for limit in limits %}
+        <tr>
+          <td>
+            {% if limit.scope.type == 'organization' %}
+              <span class="badge badge--info">Organization</span>
+            {% elif limit.scope.type == 'rbac_group' %}
+              <span class="badge badge--info">Group</span> {{ limit.scope.rbac_group_id }}
+            {% else %}
+              <span class="badge badge--info">User</span> <span class="mono">{{ limit.scope.user_id }}</span>
+            {% endif %}
+          </td>
+          <td>{{ limit.period | capitalize }}</td>
+          <td class="numeric">
+            {% if limit.amount is none %}
+              <span class="text-secondary">Unlimited</span>
+            {% else %}
+              ${{ '%.2f' | format(limit.amount | int / 100) }}
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" action="/spend/limits/{{ limit.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this cap?');">
+              <button class="btn btn--danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">No caps configured yet. Create one above &mdash; without any caps, developer spend is unlimited.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function toggleScopeFields() {
+  const type = document.getElementById('scope_type').value;
+  document.getElementById('group-field').style.display = (type === 'rbac_group') ? 'block' : 'none';
+  document.getElementById('user-field').style.display = (type === 'user') ? 'block' : 'none';
+}
+toggleScopeFields();
+</script>
+{% endblock %}
