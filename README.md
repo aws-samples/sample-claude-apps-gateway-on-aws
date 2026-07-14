@@ -6,28 +6,7 @@ Everything here — the container images, the IAM policies, the Okta OIDC integr
 
 ## Architecture
 
-```
-                                   Okta (OIDC)
-                                        │
-                     ┌──────────────────┴───────────────────┐
-                     │                                       │
-              Admin Console                            Claude Code CLI
-        (ECS Express Mode, public                  (developer workstations)
-         subnets, gated by Okta                              │
-         group membership)                                   │
-                     │                                       │
-                     │ device-flow bearer token               │ OIDC login
-                     ▼                                       ▼
-              ┌─────────────────────────────────────────────────┐
-              │         Claude apps gateway                      │
-              │  (ECS Express Mode, private subnets)             │
-              └───────┬──────────────────────┬────────────────┘
-                       │                      │
-                       ▼                      ▼
-              Amazon Bedrock            Aurora Serverless v2
-          (Claude model inference)      (device grants, spend
-                                          tracking)
-```
+![Claude Apps Gateway on AWS architecture diagram](docs/sample-claude-apps-gateway-on-aws.png)
 
 Five CDK stacks, deployed together:
 
@@ -54,6 +33,16 @@ The gateway is deliberately private (Express Mode provisions an internal load ba
 3. [Verify](docs/03-verify.md) — confirm the deployment actually works.
 4. [Admin console guide](docs/04-admin-console-guide.md) — using spend limits and model access.
 5. [Cleanup](docs/05-cleanup.md) — tearing it all down.
+
+## Screenshots
+
+| Spend dashboard | Spend limits |
+|---|---|
+| ![Admin console spend dashboard](docs/images/admin-console-spend-dashboard.png) | ![Admin console spend limits](docs/images/admin-console-spend-limits.png) |
+
+| Audit log | Model access |
+|---|---|
+| ![Admin console audit log](docs/images/admin-console-audit-log.png) | ![Admin console model access](docs/images/admin-console-model-access.png) |
 
 ## Cost note
 
