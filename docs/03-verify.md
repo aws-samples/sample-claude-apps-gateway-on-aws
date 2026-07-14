@@ -2,6 +2,8 @@
 
 A quick end-to-end check that the deployment is genuinely working, not just "all resources show green in the console."
 
+**Prerequisite: connect the VPN first.** The gateway lives on a private subnet with no direct internet route, so both the admin console's sign-in flow (3.2) and the CLI sign-in (3.5) need a private network path to it. If you haven't already done [2.3 Download and connect the VPN profile](02-deploy.md) from the deploy guide, do that now — without it, step 3.2 will hang indefinitely with no error, which looks like the deployment is broken when it isn't.
+
 ## 3.1 Gateway health
 
 ```bash
@@ -12,6 +14,7 @@ Expect `{"status":"ok"}` or similar. If this fails, check the gateway's CloudWat
 
 ## 3.2 Admin console sign-in
 
+With the VPN connected:
 1. Open `https://<your-admin-console-endpoint>/signin` in a browser.
 2. Click through the device authorization flow — this hands off to your Okta sign-in page, then back to a device-code confirmation screen.
 3. Sign in with a user who is a member of your admin Okta group ([01-prerequisites.md](01-prerequisites.md)).
@@ -36,6 +39,15 @@ Go to **Models** (`/models`) in the console. You should see the live Bedrock Ant
 
 ## 3.5 A real inference call
 
-With a developer's Claude Code CLI pointed at your gateway (see your organization's CLI configuration for `forceLoginGatewayUrl`, set to `https://<your-gateway-endpoint>`), run a simple prompt and confirm it completes. Then check the audit log again — you should see the inference call recorded with the model used and the actor's identity.
+The CLI picks up the gateway URL from a **managed settings** file, not your personal `~/.claude/settings.json` — `forceLoginGatewayUrl`/`forceLoginMethod: "gateway"` are only honored from the managed tier. Create or edit the managed-settings file for your OS (e.g. on macOS, `/Library/Application Support/ClaudeCode/managed-settings.json`; requires `sudo` to write) with:
+
+```json
+{
+  "forceLoginMethod": "gateway",
+  "forceLoginGatewayUrl": "https://<your-gateway-endpoint>"
+}
+```
+
+If your machine also has a user-level copy of this file (e.g. `~/Library/Application Support/ClaudeCode/managed-settings.json` on macOS), the **system-level file takes precedence** — editing only the user-level copy will silently have no effect. With the VPN still connected, open a new terminal, run `claude`, and `/login` (or the CLI's normal startup flow) should resolve to your gateway's URL. Confirm this on the "Trust gateway" prompt — it should show your actual gateway hostname, not a stale or unrelated one. Approve the device-authorization prompt the same way as 3.2, then run a simple prompt and confirm it completes. Then check the audit log again — you should see the inference call recorded with the model used and the actor's identity.
 
 If all five of the above pass, the deployment is fully verified: authentication, spend-limit management, model-access management, and real inference through Bedrock.
