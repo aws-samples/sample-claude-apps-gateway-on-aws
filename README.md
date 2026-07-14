@@ -6,7 +6,7 @@ Everything here — the container images, the IAM policies, the Okta OIDC integr
 
 ## Architecture
 
-![Claude Apps Gateway on AWS architecture diagram](docs/sample-claude-apps-gateway-on-aws.png)
+![Claude Apps Gateway on AWS architecture diagram](docs/images/claude-apps-gateway-on-aws.png)
 
 Five CDK stacks, deployed together:
 
