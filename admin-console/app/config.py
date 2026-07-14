@@ -37,7 +37,12 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="", case_sensitive=False)
 
     # --- Server ---
-    host: str = "0.0.0.0"
+    # Must bind all interfaces inside the container -- the container's own
+    # network boundary (only the port ECS Express Mode's ALB forwards is
+    # reachable at all) is what actually restricts exposure, not the app's
+    # own bind address. Binding to 127.0.0.1 here would make the app
+    # unreachable from the ALB's health checks too.
+    host: str = "0.0.0.0"  # nosec B104
     port: int = 8080
     public_url: str = "http://localhost:8080"
 

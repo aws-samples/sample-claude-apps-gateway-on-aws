@@ -25,7 +25,10 @@ from app.config import settings
 
 ADMIN_GROUP_NAME = "claude-gateway-admins"
 
-SESSION_KEY_TOKEN = "gateway_token"
+# Session dict key name, not a credential -- Bandit's B105 heuristic flags
+# any string literal assigned to a "*token*"-named variable regardless of
+# whether it holds a value or just a lookup key.
+SESSION_KEY_TOKEN = "gateway_token"  # nosec B105
 SESSION_KEY_CLAIMS = "gateway_claims"
 SESSION_KEY_EXPIRES_AT = "gateway_token_expires_at"
 
