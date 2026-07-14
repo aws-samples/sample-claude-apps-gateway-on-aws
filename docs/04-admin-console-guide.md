@@ -19,9 +19,9 @@ Every action here — create or delete — is a direct call to the gateway's own
 
 Select the models you want available to developers and click **Apply changes**. This is a deliberate batch action, not a per-model instant toggle: applying a change triggers a real gateway redeployment (a new ECS task with the updated environment variable), so batching multiple selections into one apply avoids multiple unnecessary redeploys. The page shows "Applying..." while the new task starts and the old one drains, then flips to "Active" once settled (usually under two minutes).
 
-### Why this works without rebuilding the container image
+### How live model-catalog changes work
 
-The gateway's own configuration format (`gateway.yaml`) can only substitute a single scalar value per `${VAR}` placeholder — it can't populate a YAML list from an environment variable. To let the admin console change the enabled model list without rebuilding and redeploying a new container image every time, the gateway's container entrypoint (`gateway/entrypoint.sh`) does a shell-level substitution of a single `AVAILABLE_MODELS_RAW` environment variable into the YAML file's `availableModels` list, before the gateway process itself starts and parses the file. Changing which models are enabled is therefore a plain ECS environment-variable update (`ecs:UpdateExpressGatewayService`) — the same container image, just a different variable value.
+The gateway's own configuration format (`gateway.yaml`) has no native way to populate a YAML list from a single environment variable — only scalar `${VAR}` substitution is supported. We solved this at the container level: the gateway's entrypoint (`gateway/entrypoint.sh`) expands a single `AVAILABLE_MODELS_RAW` environment variable into the YAML's `availableModels` list before the gateway process starts and parses the file. That one mechanism is what turns "which Claude models are available to developers" into a plain ECS environment-variable update (`ecs:UpdateExpressGatewayService`) — same container image, new variable value, no rebuild, no redeploy pipeline, no waiting on a CI job. Click **Apply changes** in the console, and the new catalog is live across your organization within minutes.
 
 ### The auditability difference from spend limits
 

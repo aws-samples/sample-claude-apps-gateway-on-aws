@@ -36,6 +36,8 @@ The gateway is deliberately private (Express Mode provisions an internal load ba
 
 ## Screenshots
 
+The admin console turns spend control and model access — normally a support ticket, a CLI command, or a redeploy — into something a platform admin manages directly, with every action attributed to their own identity and audited by the gateway itself.
+
 | Spend dashboard | Spend limits |
 |---|---|
 | ![Admin console spend dashboard](docs/images/admin-console-spend-dashboard.png) | ![Admin console spend limits](docs/images/admin-console-spend-limits.png) |
