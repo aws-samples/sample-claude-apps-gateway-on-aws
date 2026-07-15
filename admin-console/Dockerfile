@@ -3,7 +3,12 @@ FROM public.ecr.aws/docker/library/python:3.12-slim
 WORKDIR /app
 
 # Minimal deps: only what's needed to install Python packages and run the app.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Security updates for the base image's OS packages are applied here too --
+# without this, Amazon Inspector flags known CVEs in packages that ship with
+# the base image itself, not just the ones we explicitly install.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
         curl \
     && rm -rf /var/lib/apt/lists/*
 

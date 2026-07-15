@@ -232,6 +232,11 @@ export class AdminConsoleStack extends cdk.Stack {
       properties: {
         serviceArn: service.attrServiceArn,
         realPublicUrl: cdk.Fn.sub('https://${Endpoint}', { Endpoint: service.attrEndpoint }),
+        // Forces this custom resource to re-run on every deploy -- see the
+        // matching comment in gateway-stack.ts's GatewayUrlFixer for why
+        // this is required, not optional, on redeploys that only change
+        // the container image.
+        deployTrigger: Date.now().toString(),
       },
     }).node.addDependency(service);
 

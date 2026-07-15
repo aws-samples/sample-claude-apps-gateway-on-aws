@@ -29,7 +29,9 @@ ARG CLAUDE_CODE_VERSION=2.1.204
 # itself is the one Anthropic publishes, not merely internally self-consistent.
 ARG CLAUDE_CODE_SIGNING_KEY_FINGERPRINT=31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
       gnupg \

@@ -20,10 +20,16 @@ oidc:
   # email and groups; userinfo_fallback fetches them from /userinfo instead.
   # Harmless to leave on for IdPs that don't need it.
   userinfo_fallback: true
-  # Okta only emits the groups claim when the groups scope is explicitly
-  # requested AND the app's own "Group claim type" is configured under
-  # Sign On -> OpenID Connect ID Token (see docs/01-prerequisites.md --
-  # requesting the scope alone is necessary but not sufficient on Okta).
+  # Okta only emits the groups claim when the app's own "Group claim type"
+  # is configured under Sign On -> OpenID Connect ID Token (see
+  # docs/01-prerequisites.md), AND -- confirmed the hard way against Okta's
+  # org-wide default authorization server -- the groups scope is still
+  # requested here even though that server doesn't formally advertise
+  # "groups" in its own discovery document's scopes_supported. Without
+  # requesting it, the app-level claim filter is configured but the
+  # resulting token/userinfo response omits groups entirely, and the
+  # gateway correctly reports "signed in, but not a member of the admin
+  # group" for every user regardless of their real membership.
   scopes: [openid, profile, email, offline_access, groups]
   # allowed_email_domains: [example.com]   # uncomment and restrict for production
 

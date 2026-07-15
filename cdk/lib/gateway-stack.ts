@@ -226,6 +226,20 @@ export class GatewayStack extends cdk.Stack {
       properties: {
         serviceArn: service.attrServiceArn,
         realPublicUrl: cdk.Fn.sub('https://${Endpoint}', { Endpoint: service.attrEndpoint }),
+        // Forces this custom resource to re-run on every deploy, not just
+        // when serviceArn/realPublicUrl themselves change (they don't --
+        // Express Mode's endpoint hostname is stable across redeploys).
+        // Without this, a redeploy that only changes the container image
+        // (e.g. rebuilding after a Dockerfile fix) has CloudFormation
+        // re-apply this stack's own CfnExpressGatewayService definition --
+        // which still has the literal "https://placeholder.invalid" baked
+        // into its template -- and since this custom resource's own
+        // properties are unchanged, CloudFormation skips re-invoking it,
+        // leaving the placeholder live and unpatched. Confirmed the hard
+        // way: a redeploy left GATEWAY_PUBLIC_URL as the placeholder and
+        // broke sign-in, even though the original deploy had patched it
+        // correctly.
+        deployTrigger: Date.now().toString(),
       },
     }).node.addDependency(service);
 

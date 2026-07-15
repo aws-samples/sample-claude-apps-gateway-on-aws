@@ -174,7 +174,16 @@ export class BuildMachineStack extends cdk.Stack {
               return invocation.StandardOutputContent || '';
             }
             if (['Failed', 'Cancelled', 'TimedOut'].includes(invocation.Status)) {
-              throw new Error(\`Command failed (\${invocation.Status}): \${invocation.StandardErrorContent || invocation.StandardOutputContent}\`);
+              // CloudFormation Custom Resource responses have a hard size
+              // limit (well under a typical docker-build log), so the raw
+              // SSM output can't be thrown verbatim here -- doing so
+              // previously surfaced as an opaque "Response object is too
+              // long" error that hid the actual failure entirely. Truncate
+              // to the last part of the output, which is where the actual
+              // failing command's error normally appears.
+              const raw = invocation.StandardErrorContent || invocation.StandardOutputContent || '';
+              const truncated = raw.length > 1000 ? '...(truncated)...\\n' + raw.slice(-1000) : raw;
+              throw new Error(\`Command failed (\${invocation.Status}): \${truncated}\`);
             }
           }
           throw new Error('Command timed out waiting for completion');
