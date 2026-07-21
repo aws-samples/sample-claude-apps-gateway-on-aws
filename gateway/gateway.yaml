@@ -47,6 +47,37 @@ upstreams:
 
 auto_include_builtin_models: true
 
+# Optional: route specific models through a specific Bedrock inference
+# profile ARN -- most commonly an application inference profile you created
+# for cost allocation/tracking, a provisioned-throughput allotment, or a
+# guardrail attached to that profile -- instead of the standard
+# us.anthropic.* cross-region profile auto_include_builtin_models routes
+# everything to by default.
+#
+# Add one entry per model that needs its own profile. Any model NOT listed
+# here keeps using the default us.anthropic.* cross-region profile
+# untouched -- this block only overrides what you explicitly list.
+#
+# The upstream_model key ("bedrock") must match the upstreams[].name
+# above; since that entry has no explicit name:, it defaults to its
+# provider string, "bedrock".
+#
+# See docs/06-custom-inference-profile.md for the full walkthrough,
+# including the one-line IAM change this requires in
+# cdk/lib/gateway-stack.ts (already included in this repo -- it grants
+# any application inference profile in your account, so adding more
+# entries here later needs no further IAM change).
+#
+# models:
+#   - id: claude-sonnet-5
+#     label: Claude Sonnet 5 (custom inference profile)
+#     upstream_model:
+#       bedrock: arn:aws:bedrock:<region>:<account-id>:application-inference-profile/<profile-id>
+#   - id: claude-opus-4-8
+#     label: Claude Opus 4.8 (custom inference profile)
+#     upstream_model:
+#       bedrock: arn:aws:bedrock:<region>:<account-id>:application-inference-profile/<another-profile-id>
+
 # Enables /v1/organizations/spend_limits and live per-developer spend
 # enforcement, plus the model-access management the admin console uses.
 # admin_groups grants full (read+write) access to any signed-in gateway

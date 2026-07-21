@@ -80,6 +80,23 @@ export class GatewayStack extends cdk.Stack {
         `arn:${cdk.Aws.PARTITION}:bedrock:*::foundation-model/anthropic.*`,
       ],
     }));
+    // Covers any custom Bedrock inference profile you add to gateway.yaml's
+    // optional models: block (see docs/06-custom-inference-profile.md) --
+    // most commonly an application inference profile created for cost
+    // allocation, provisioned throughput, or a guardrail. Scoped to any
+    // region (application inference profiles aren't region-restricted the
+    // way the account is) but only this account's own profiles, using
+    // cdk.Aws.ACCOUNT_ID rather than a hardcoded ID so this grant needs no
+    // changes when you add, remove, or point a model at a different
+    // profile in gateway.yaml -- only the YAML changes; IAM doesn't.
+    taskRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'BedrockInvokeCustomInferenceProfiles',
+      actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
+      resources: [
+        `arn:${cdk.Aws.PARTITION}:bedrock:*:${cdk.Aws.ACCOUNT_ID}:application-inference-profile/*`,
+        `arn:${cdk.Aws.PARTITION}:bedrock:*::foundation-model/anthropic.*`,
+      ],
+    }));
 
     const infrastructureRole = new iam.Role(this, 'GatewayInfrastructureRole', {
       assumedBy: new iam.ServicePrincipal('ecs.amazonaws.com'),

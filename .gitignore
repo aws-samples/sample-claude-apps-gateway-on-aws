@@ -20,3 +20,10 @@ admin-console/**/__pycache__/
 *.ovpn
 *.pem
 *.key
+
+# Local-only project spec, never pushed to GitHub
+SPEC.md
+
+# Personal how-to with hardcoded live endpoint hostnames for a specific
+# deployment -- not generic reference material, never pushed to GitHub
+docs/trying-out-a-deployed-gateway.md
